@@ -8,6 +8,7 @@ import select
 import threading
 import Queue
 import sys
+import errno
 
 # Custom Imports
 import world
@@ -196,7 +197,8 @@ def recv():
             data = data + page if data else page
             length -= len(page)
         return [ c.encode('hex') for c in data ]
-    except:
+    except Exception as e:
+        raise
         con.settimeout(None)
         return None
 
@@ -229,12 +231,17 @@ def networking():
         while not is_done:
             if not network_ops.empty():
                 cmd = network_ops.get()
+                logger.debug(cmd.encode('hex'))
                 send(cmd)
                 network_ops.task_done()
             if select.select([con], [], [], 1) == ([], [], []):
                 pass
             else:
                 a = recv()
+                if isinstance(a, basestring):
+                    logger.debug(a.encode('hex'))
+                else:
+                    logger.debug('A:{}'.format(a))
                 if a:
                     process_response(a)
                     redraw = True

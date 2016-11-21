@@ -1,0 +1,8 @@
+#! /bin/bash
+##
+# TODO: turn this into a proper MAKE file.
+##
+CPATH="/usr/include/libxml2/:"  # the : at the end ensures we include the cwd.
+g++ -o playground -lglfw -lGLEW -lGL -g client.cpp -g shader.cpp
+#g++ -o world -std=c++11 -g world.cpp -lxml2
+g++ -o server -std=c++11 -lpthread -lxml2 -g server.cpp -g serializer.c -g world.cpp
