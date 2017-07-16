@@ -51,7 +51,7 @@ char Tile::represent()
 // World Class func declerations
 World::World(int w, int h): width(w), height(h), array(new TilePtr[width*height]), wall(true, true), empty(true, false), occupied(false, false)
 {
-    for (int i=0; i < (width*height); i++)
+    for (int i=0; i < (this->width*this->height); i++)
     {
         array[i] = &wall;
     }
@@ -73,7 +73,7 @@ TilePtr ** World::getMatrix()
 
 int World::removeMatrix(TilePtr ** matrix)
 { //This doesn't alter the world. just free's memory.
-    for (int row=0; row < height; row++)
+    for (int row=0; row < this->height; row++)
     {
         delete [] matrix[row];
     }
@@ -145,7 +145,7 @@ bool World::fromXML(std::string xml, bool hard_reset)
 
 int World::addTile(Tile * tile, std::pair<int, int> pos)
 {
-    array[(pos.second*width)+pos.first] = tile;
+    array[(pos.second*this->width)+pos.first] = tile;
     return true;
 };
 
@@ -157,7 +157,7 @@ Tile * World::getTile(std::pair<int,int> position)
 bool World::movePlayer(Player * player, std::pair<int,int> position)
 {
     bool success = false;
-    Tile * cur_tile = array[(position.second*width)+position.first];
+    Tile * cur_tile = array[(position.second*this->width)+position.first];
     if (cur_tile->isEmpty() && !cur_tile->isWall())
     {
         std::pair<int,int> cur_pos = player->getPosition();

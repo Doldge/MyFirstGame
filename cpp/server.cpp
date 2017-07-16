@@ -17,12 +17,19 @@ void * connection_handler(void *);
 
 World * new_world()
 {
+    /* This doesn't work. Not sure why. As best I can tell the room building
+     * code doesn't do what I expect it to. It seems to replace abitrary blocks, but not
+     * the entire room. Not sure if I'm screwing up my object references or if it's an issue
+     * with the carving code.
+     * Something does appear to replacing *some* of the blocks though, just not a rooms worth.
+     */
     World * world = new World(80, 30);
-
-    if ( ! (buildRooms( world, 17, 11, 3, 6, 5 )) )
+    bool worlds_built = buildRooms( world, 17, 11, 3, 6, 5);
+    if ( ! worlds_built )
     {
         fprintf( stderr, "Failed to build Rooms.\n" );
     };
+    return world;
     CorridorBuilder * cb = new CorridorBuilder( world );
     if ( ! (cb->generate()) )
     {
@@ -47,7 +54,7 @@ int main()
 {
     int sock_fd, new_sock_fd, port_no, cli_len;
     struct sockaddr_in serv_addr, cli_addr;
-    int activity, max_fd, opts = 1;
+    int max_fd, opts = 1;
 
     fd_set read_fds;
 
@@ -87,7 +94,9 @@ int main()
    
     cli_len = sizeof(cli_addr); 
 
-
+	fprintf( stdout, "The Server is now running.\n");
+	fprintf( stdout, "Address: %X\n", serv_addr.sin_addr.s_addr);
+	fprintf( stdout, "Port: %i\n", port_no);
     while ( true )
     {
         FD_ZERO(&read_fds); 
@@ -107,7 +116,7 @@ int main()
             }
         }
 
-        activity = select( max_fd+1, &read_fds, NULL, NULL, NULL );
+        select( max_fd+1, &read_fds, NULL, NULL, NULL );
 
         if ( FD_ISSET(sock_fd, &read_fds) )
         {

@@ -117,7 +117,6 @@ class World(object):
         return xml_world
 
     def getXMLasString(self):
-        print(ET.tostring(self.getXML()))
         return ET.tostring(self.getXML())
 
     def getXMLPlayers(self):

@@ -32,11 +32,9 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
         self.server.clients.append(self.request)
         try:
             while True:
-                #NULL out the length values.
-                #Because nobody outside of this point cares what's there.
-                data = ''.join(['00'.decode('hex')]*4)
+                data = ''
                 try:
-                    length = self.request.recv(4)
+                    data = length = self.request.recv(4)
                 except socket.error as e:
                     if e.errno == 11:
                         continue
@@ -49,6 +47,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                     page = self.request.recv(length)
                     data = data + page if data else page
                     length -= len(page)
+                logger.debug(data.encode('hex'))
                 self.process_request(data)
         except Exception as e:
             logger.exception('Exception occurred in handle')
@@ -99,14 +98,14 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
             m = struct.pack(server[version][WORLD](len(w)), 12+len(w), version,
             WORLD, w)
             #world.draw(self.server.world)
-            self.request.sendall(m)
+            self.sendall(self.request, m)
             m = None
             if len(self.server.clients) < 2:
                 # Wait for more players.
                 m = struct.pack(
                     server[version][PLAYER_WAIT], 12, version, PLAYER_WAIT
                 )
-                self.request.sendall(m)
+                self.sendall(self.request, m)
             else:
                 if not self.server.started:
                     # Start the game.
@@ -131,9 +130,17 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
                         server[version].get(command), 16, version, command,
                         self.server.clients.index(sock)
                     )
-                    sock.sendall(m)
+                    self.sendall(sock, m)
         else:
             logger.debug(block)
+
+    def send(self, sock, data):
+        logger.debug(data.encode('hex'))
+        return sock.send(data)
+
+    def sendall(self, sock, data):
+        logger.debug(data.encode('hex'))
+        return sock.sendall(data)
 
 
 class GameServer(SocketServer.ThreadingTCPServer):
@@ -160,7 +167,7 @@ class GameServer(SocketServer.ThreadingTCPServer):
         for sock in self.clients:
             if sock != omitsock:
                 try:
-                    sock.send(message)
+                    self.send(sock, message)
                 except socket.error as e:
                     if e.errno == 9 or e.errno == 32:
                         try:
