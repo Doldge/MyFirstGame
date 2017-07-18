@@ -17,19 +17,13 @@ void * connection_handler(void *);
 
 World * new_world()
 {
-    /* This doesn't work. Not sure why. As best I can tell the room building
-     * code doesn't do what I expect it to. It seems to replace abitrary blocks, but not
-     * the entire room. Not sure if I'm screwing up my object references or if it's an issue
-     * with the carving code.
-     * Something does appear to replacing *some* of the blocks though, just not a rooms worth.
-     */
     World * world = new World(80, 30);
     bool worlds_built = buildRooms( world, 17, 11, 3, 6, 5);
     if ( ! worlds_built )
     {
         fprintf( stderr, "Failed to build Rooms.\n" );
     };
-    return world;
+    // FIXME: CorridorBuilder isn't working correctly.
     CorridorBuilder * cb = new CorridorBuilder( world );
     if ( ! (cb->generate()) )
     {
@@ -222,17 +216,17 @@ void * connection_handler(void * args)
                     fprintf( stdout, "%02X", message[i]);
                 }
                 fprintf( stdout, "\n");
-                for (int i = 0; i < 12; i++)
+                TilePtr ** matrix = myWorld->getMatrix();
+                fprintf( stdout, "Height is : %i\n", myWorld->getHeight());
+                fprintf( stdout, "Width is: %i\n", myWorld->getWidth());
+                for (int y=0; y < myWorld->getHeight(); y++)
                 {
-                    fprintf( stdout, "%02X", buffer[i]);
-                }
-                fprintf( stdout, "\n");
-                TilePtr ** matrix = myWorld->getMatrix(); 
-                for (int h=0; h < myWorld->getHeight(); h++)
-                {
-                    for (int w=0; w < myWorld->getWidth(); w++)
+                    for (int x=0; x < myWorld->getWidth(); x++)
                     {
-                        fprintf( stdout, "%c", matrix[h][w]->represent() );
+                        fprintf( stdout, "%c", matrix[y][x]->represent() );
+                        /*if (matrix[y][x]->represent() == ' ') {
+                            fprintf( stderr, "Y[%i] X[%i] POS[%i]\n", y, x, (y*myWorld->getWidth())+x);
+                        }*/
                     };
                     fprintf( stdout, "\n" );
                 };

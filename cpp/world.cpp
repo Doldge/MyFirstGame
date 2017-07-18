@@ -59,13 +59,14 @@ World::World(int w, int h): width(w), height(h), array(new TilePtr[width*height]
         
 TilePtr ** World::getMatrix()
 {
-    TilePtr **matrix = new TilePtr*[width];
-    for (int row=0; row < height; row++)
+    TilePtr **matrix = new TilePtr*[height];
+    for (int y=0; y < height; y++)
     {
-        matrix[row] = new TilePtr[width];
-        for (int col=0; col < width; col++)
+        matrix[y] = new TilePtr[width];
+        for (int x=0; x < width; x++)
         {
-            matrix[row][col] = array[row*col];
+            //fprintf(stdout, "X[%i] Y[%i] POS[%i]\n", x, y, (y*width)+x);
+            matrix[y][x] = array[(y*width)+x];
         }
     }
     return matrix;
@@ -145,6 +146,8 @@ bool World::fromXML(std::string xml, bool hard_reset)
 
 int World::addTile(Tile * tile, std::pair<int, int> pos)
 {
+    // Should always be X, Y.
+    // When referenced in the matrix, it's Y, X.
     array[(pos.second*this->width)+pos.first] = tile;
     return true;
 };
@@ -170,7 +173,7 @@ bool World::movePlayer(Player * player, std::pair<int,int> position)
 
 Tile * World::getEmpty()
 {
-       return &empty; 
+       return &empty;
 };
 
 Tile * World::getWall()
@@ -247,16 +250,17 @@ class Room
             {
                 for (int row=y; row < (y+height+1); row++)
                 {
-                    walls[i] = std::pair<int, int>(x, y);
+                    walls[i] = std::pair<int, int>(col, row);
                     ++i;
                 }
             }
             if (build)
             {
                 // Alter the world.
-                for (int i=0; i < (width*height); i++)
+                for (int i=0; i < ((width+1)*(height+1)); i++)
                 {
-                   myWorld->addTile(myWorld->getEmpty(),walls[i]); 
+                    //fprintf(stdout, "Carving position %i\n", ((walls[i].first+1)*(walls[i].second+1)-(myWorld->getHeight()+myWorld->getWidth())));
+                    myWorld->addTile(myWorld->getEmpty(),walls[i]); 
                 }
             }
             corners[0] = std::pair<int,int>(x,y); // Top Left
@@ -315,11 +319,11 @@ bool buildRooms(World * world, int max_width, int max_height, int max_rooms, int
         int x = rand() % (world->getWidth()-(width+1));
         int y = rand() % (world->getHeight() - (height+1));
         bool can_build = true;
-        for (int row=x; row < (x+width+1); ++row)
+        for (int col=x; col < (x+width+1); ++col)
         {
-            for (int col=y; col < (y+height+1); ++col)
+            for (int row=y; row < (y+height+1); ++row)
             {
-                Tile * tile = world->getTile(std::pair<int,int>(x,y));
+                Tile * tile = world->getTile(std::pair<int,int>(col,row));
                 if ( tile == NULL || !tile->isEmpty() || ! tile->isWall() ) {
                     //something already occupies this space (a player or another room).
                     can_build = false;
