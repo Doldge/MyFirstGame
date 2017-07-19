@@ -22,6 +22,21 @@ const char EMPTY  = ' ';
 const char WALL   = '#';
 const char PLAYER = '$';
 
+int rand_lim(int limit) {
+/* return a random number between 0 and limit inclusive.
+ */
+
+    int divisor = RAND_MAX/(limit+1);
+    int retval;
+
+    do {
+        retval = rand() / divisor;
+    } while (retval > limit);
+
+    return retval;
+}
+
+
 //This is fucking aweful. Why can't I just recreate the fucking class instead of this weird/terrible namespace thing with class definitions in the header files.
 //this is why nobody likes c++.
 
@@ -356,9 +371,9 @@ bool CorridorBuilder::generate() {
         return false;
     }
     bool res;
-    res = this->createMaze(std::pair<int,int>(0,0));
-    /*if ( res )
-        res = this->cleanUp();*/
+    res = this->createMaze(std::pair<int,int>(1,1));
+    if ( res )
+        res = this->cleanUp();
     return res;
 }
 
@@ -378,49 +393,52 @@ bool CorridorBuilder::roomsOverlap(Room * room1, Room * room2)
 
 bool CorridorBuilder::createMaze(std::pair<int, int> start_pos)
 {
-    int some_fucking_iterator = 0; //FIXME who names variables like that?
+    int free_cell_count = 0;
     int windingPercent = 15;
     std::pair<int,int> * cells = new std::pair<int,int>[world->getWidth() * world->getHeight()]();
-    int last_dir = (int) NULL;
-    cells[some_fucking_iterator] = start_pos;
+    int last_dir = -1;
+    cells[free_cell_count] = start_pos;
     srand(time(NULL)); // Seed the random.
-    while (some_fucking_iterator >= 0)
+
+    while (free_cell_count >= 0)
     {
-        std::pair<int,int> cell = cells[some_fucking_iterator];
-        std::pair<int,int> * unmade_cells = new std::pair<int,int>[4]();
+        std::pair<int,int> cell = cells[free_cell_count];
+        int * unmade_cells = new int[4]();
+        bool no_cells = true;
         for (int direction =0; direction <= 3; direction++)
         {
-           if ( this->canCarve(cell, DIRECTIONS[direction]) )
-           {
-                unmade_cells[direction] = DIRECTIONS[direction];
-           }
+            unmade_cells[direction] = -1;
+            if ( this->canCarve(cell, DIRECTIONS[direction]) )
+            {
+                unmade_cells[direction] = true;
+                no_cells = false;
+            }
         }
-        int direction;
-        if ( unmade_cells[0].first != (int) NULL || unmade_cells[1].first != (int) NULL || unmade_cells[2].first != (int) NULL || unmade_cells[3].first != (int) NULL )
+        int direction = -1;
+        if ( ! no_cells )
         {
             int change = rand() % 100;
-            if ( (last_dir && unmade_cells[last_dir].first != (int) NULL) && (change > windingPercent))
+            if ( (last_dir >= 0 && unmade_cells[last_dir]) && (change > windingPercent))
             {
                 direction = last_dir;
             } else {
-                std::pair<int,int> d;
-                while ( d.first == (int) NULL )
+                int d = -1;
+                while ( d == -1 )
                 {
-                    direction = rand() % 3;
+                    direction = rand_lim(3);
                     d = unmade_cells[direction];
                 };
             }
 
-            this->carve(cell, unmade_cells[direction]);
-            this->carve(cell, std::pair<int,int>(unmade_cells[direction].first * 2, unmade_cells[direction].second * 2));
-            this->carve(cell, std::pair<int,int>(unmade_cells[direction].first * 2, unmade_cells[direction].second * 2));
-            some_fucking_iterator += 1;
-            cells[some_fucking_iterator] = std::pair<int,int>(cell.first+(unmade_cells[direction].first * 2), cell.second+(unmade_cells[direction].second*2));
+            this->carve(cell, DIRECTIONS[direction]);
+            this->carve(cell, std::pair<int,int>(DIRECTIONS[direction].first * 2, DIRECTIONS[direction].second * 2));
+            free_cell_count += 1;
+            cells[free_cell_count] = std::pair<int,int>(cell.first + DIRECTIONS[direction].first * 2, cell.second + DIRECTIONS[direction].second * 2);
             last_dir = direction;
         } else {
-           cells[some_fucking_iterator] = std::pair<int,int>();
-           some_fucking_iterator -= 1; 
-        }                
+            free_cell_count -= 1;
+            last_dir = -1;
+        }
     }
 
     return true;
@@ -428,9 +446,9 @@ bool CorridorBuilder::createMaze(std::pair<int, int> start_pos)
 
 bool CorridorBuilder::canCarve(std::pair<int,int> cell, std::pair<int,int> direction)
 {
-    cell.first = cell.first + (direction.first*2);
-    cell.second = cell.second + (direction.second*2); 
-    if ( cell.first >= world->getWidth() || cell.second >= world->getHeight() || cell.first < 0 || cell.second < 0 )
+    cell.first = cell.first + direction.first*2;
+    cell.second = cell.second + direction.second*2; 
+    if ( cell.first >= world->getWidth() || cell.second >= world->getHeight() || cell.first <= 0 || cell.second <= 0 )
         return false;
     return world->getTile(cell)->isWall();
 };
@@ -438,8 +456,8 @@ bool CorridorBuilder::canCarve(std::pair<int,int> cell, std::pair<int,int> direc
 std::pair<int, int> CorridorBuilder::carve(std::pair<int,int> cell, std::pair<int,int> direction)
 {
     cell.first = cell.first + direction.first;
-    cell.second = cell.second + direction.second; 
-    world->addTile( world->getEmpty(), cell); 
+    cell.second = cell.second + direction.second;
+    world->addTile( world->getEmpty(), cell);
     return cell;
 };
 
@@ -456,7 +474,7 @@ bool CorridorBuilder::cleanUp() {
                     continue;
 
                 int open_sides = 0;
-                for (int i=0; i < 3; i++)
+                for (int i=0; i <= 3; i++)
                 {
                     std::pair<int,int> d = DIRECTIONS[i];
                     if ( ((x+d.first) < 0) || ((y+d.second) < 0) || ((x+d.first) >= this->world->getWidth()) || ((y+d.second) >= this->world->getHeight()) )

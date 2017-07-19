@@ -23,7 +23,6 @@ World * new_world()
     {
         fprintf( stderr, "Failed to build Rooms.\n" );
     };
-    // FIXME: CorridorBuilder isn't working correctly.
     CorridorBuilder * cb = new CorridorBuilder( world );
     if ( ! (cb->generate()) )
     {
