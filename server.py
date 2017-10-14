@@ -18,7 +18,7 @@ HOST = ''
 PORT = 6699
 CURRENT_VERSION = 0x100
 logging.basicConfig(
-    level = logging.DEBUG
+    level=logging.DEBUG
 )
 logger = logging.getLogger()
 

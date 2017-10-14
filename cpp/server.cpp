@@ -70,7 +70,7 @@ int main()
     };
 
     bzero( (char *) &serv_addr, sizeof(serv_addr) );
-    port_no = 6699;
+    port_no = 6698;
 
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_addr.s_addr = INADDR_ANY;
@@ -198,7 +198,8 @@ void * connection_handler(void * args)
                 //FIXME
                 // we're supposed to return the world first, and then the player connection OK response.
                 int res;
-                unsigned char message[256], * ptr; 
+                unsigned char message[256], * ptr;
+                char * w = myWorld->getXMLAsString();
                 ptr = serialize_int( message, sizeof(int) * 4 );
                 fprintf( stdout, "Message is: %s\tlen:%ld\tfull-length:%ld\n", message, ptr - message, strlen((char *)message) );
                 fprintf( stdout, "m:%c %c %c %c\n", message[0], message[1], message[2], message[3] );

@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <tuple>
+#include <libxml/tree.h>
 
 
 class Player;
@@ -38,8 +39,8 @@ class World {
         Tile * getOccupied();
         int getWidth();
         int getHeight();
-        void * getXML();
-        std::string getXMLAsString();
+        xmlBufferPtr getXML();
+        char * getXMLAsString();
         bool createFromXML(std::string);
         bool updateFromXML(std::string);
 };

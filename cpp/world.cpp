@@ -97,7 +97,7 @@ int World::removeMatrix(TilePtr ** matrix)
     return true;
 };
 
-void * World::getXML()
+xmlBufferPtr World::getXML()
 {
     xmlDocPtr doc = NULL;
     xmlNodePtr root_node = NULL, node = NULL, contents = NULL;
@@ -143,13 +143,13 @@ void * World::getXML()
     xmlBufferPtr buff = xmlBufferCreate();
     xmlNodeDump(buff, doc, NULL, 4, 1);
     printf("%s\n", buff->content);
-    return NULL;
+    //return NULL;
+    return buff;
 }
 
-std::string World::getXMLAsString()
+char * World::getXMLAsString()
 {
-
-    return NULL;
+    return (char *) this->getXML()->content;
 }
 
 bool World::fromXML(std::string xml, bool hard_reset)
